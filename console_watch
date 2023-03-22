@@ -1,0 +1,205 @@
+#!/usr/local/bin/php -q
+<?php
+
+
+/*******************************************************
+// 세븐세그먼트
+ *******************************************************/
+define('SCREEN_WIDTH', exec('tput cols'));
+define('SCREEN_HEIGHT', exec('tput lines'));
+
+
+function clean($all_reset=false) {
+
+    $col = "[92m"; 
+    if($all_reset) {
+        $col = "[0m";
+    }
+    // 화면삭제, 좌측 최상단 이동, 파랑색
+    echo sprintf("\033[2J").sprintf("\033[1;1H").sprintf("\033".$col);
+}
+
+
+
+if(SCREEN_WIDTH < 230) {
+    notify('전체화면으로 이용해주세요.');
+    exit;
+}
+
+function notify($msgs) {
+    $my_sess = shell_exec('who am i');
+    $tmp = array_filter(explode(" ", $my_sess));
+
+    $usr = array_shift($tmp);
+    $pts = array_shift($tmp);
+
+
+    if(is_array($msgs) === false) {
+        $msgs = array($msgs);
+    }
+    foreach($msgs as $msg) {
+        usleep(1000000);
+        shell_exec("echo '".$msg."' | write ".$usr." ".$pts);
+    }
+}
+
+
+
+
+function getSegment($is_vertical=true) {
+    if($is_vertical) {
+        $segment = array();
+        $segment[] = "   __";
+        $segment[] = "  /  \\";
+        $segment[] = " /    \\";
+        $segment[] = "|      |";
+        $segment[] = "|      |";
+        $segment[] = "|      |";
+        $segment[] = "|      |";
+        $segment[] = "|      |";
+        $segment[] = "|      |";
+        $segment[] = "|      |";
+        $segment[] = " \    /";
+        $segment[] = "  \__/";
+    } else {
+        $segment = array();
+        $segment[] = "   ________________";
+        $segment[] = "  /                \\";
+        $segment[] = " /                  \\";
+        $segment[] = " \                  /";
+        $segment[] = "  \________________/";
+    }
+    
+    return $segment;
+}
+
+
+function getDefaultSegment($x=10, $num) {
+
+
+    $seg_group = array();
+
+    switch($num) {
+        case 0:
+            $seg_group = array(1,2,3,4,5,6);
+            break;
+        case 1:
+            $seg_group = array(2,3);
+            break;
+        case 2:
+            $seg_group = array(1,2,4,5,7);
+            break;
+        case 3:
+            $seg_group = array(1,2,3,4,7);
+            break;
+        case 4:
+            $seg_group = array(2,3,6,7);
+            break;
+        case 5:
+            $seg_group = array(1,3,4,6,7);
+            break;
+        case 6:
+            $seg_group = array(1,3,4,5,6,7);
+            break;
+        case 7:
+            $seg_group = array(1,2,3,6);
+            break;
+        case 8:
+            $seg_group = array(1,2,3,4,5,6,7);
+            break;
+        case 9:
+            $seg_group = array(1,2,3,4,6,7);
+            break;
+        default:
+            exit;
+            break;
+    }
+
+
+    $y = 5;
+    $pos_map = array();
+    $pos_map[1] = array($x, $y);
+    $pos_map[2] = array($x + 21, $y+3); 
+    $pos_map[3] = array($x + 21, $y+15);  
+    $pos_map[4] = array($x, $y+25);
+    $pos_map[5] = array($x - 7, $y+15);
+    $pos_map[6] = array($x - 7, $y+3);
+    $pos_map[7] = array($x, $y + 13);
+
+
+    $horizontal_group = array(1, 7, 4);
+    $vertical_group = array(2, 3, 6, 5);
+
+
+    foreach($seg_group as $i) {
+        //if($i > 2) { break;}
+        if(in_array($i, $horizontal_group)) {
+
+            $segment = getSegment(false);
+        } else if(in_array($i, $vertical_group)) {
+            $segment = getSegment();
+        } else { continue; }
+        
+        $pos_x = $pos_map[$i][0];
+        $pos_y = $pos_map[$i][1];
+        foreach($segment as $seg) {
+            echo sprintf("\033[%d;%dH", $pos_y, $pos_x).$seg;
+            $pos_y++;
+        }
+        
+    }
+}
+
+function getColon($x=83) {
+    $colon = array(); 
+    $colon[] = sprintf("\033[5m")." _____ ";
+    $colon[] = "|     |";
+    $colon[] = "|     |";
+    $colon[] = "|_____|";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = "";
+    $colon[] = " _____ ";
+    $colon[] = "|     |";
+    $colon[] = "|     |";
+    $colon[] = "|_____|".sprintf("\033[0m");
+
+
+    $pos_x = $x;
+    $pos_y = 10;
+    foreach($colon as $col) {
+        echo sprintf("\033[%d;%dH", $pos_y, $pos_x).$col;
+        $pos_y++;
+    }
+}
+
+echo sprintf("\033[2J");
+
+
+
+
+while(1) {
+
+    $hour = date('H');
+    $min = date('i');
+
+    getDefaultSegment(10, intval($hour{0}));
+    getDefaultSegment(49, intval($hour{1}));
+    getColon();
+
+    getDefaultSegment(101, intval($min{0}));
+    getDefaultSegment(140, intval($min{1}));
+    sleep(60);
+    echo sprintf("\033[2J");
+}
+?>
+
